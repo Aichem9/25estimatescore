@@ -91,7 +91,7 @@ header = [comb(a,b) for a,b in zip(h1, h2)]
 df = raw_all.iloc[9:, :].copy()
 df.columns = header
 
-# Keep also raw positional columns for D/E/F/G and A
+# Column positions
 pos_A = raw_all.columns[0] if raw_all.shape[1] > 0 else None
 pos_D = raw_all.columns[3] if raw_all.shape[1] > 3 else None
 pos_E = raw_all.columns[4] if raw_all.shape[1] > 4 else None
@@ -103,14 +103,12 @@ df = df.dropna(how="all").dropna(axis=1, how="all")
 df = clean_consecutive_duplicates(df)
 
 # ---------- Extract required fields ----------
-# Item number from column A (pos 0) starting row 10
 items = raw_all.iloc[9:, 0] if pos_A is not None else pd.Series(range(1, len(df)+1))
 items = items.iloc[:len(df)].reset_index(drop=True)
 items.name = "문항번호"
 
-# Difficulty band from D/E/F O-marks with priority D>E>F
 def derive_band(irow):
-    r = 9 + irow  # offset from row 10
+    r = 9 + irow
     hard = raw_all.iloc[r, 3] if pos_D is not None and r < len(raw_all) else None
     mid  = raw_all.iloc[r, 4] if pos_E is not None and r < len(raw_all) else None
     easy = raw_all.iloc[r, 5] if pos_F is not None and r < len(raw_all) else None
@@ -121,19 +119,15 @@ def derive_band(irow):
 
 band = pd.Series([derive_band(i) for i in range(len(df))], name="난이도영역")
 
-# Points from column G starting row 10
 points_raw = raw_all.iloc[9:, 6] if pos_G is not None else pd.Series([np.nan]*len(df))
 points = ensure_numeric(points_raw, default=np.nan).iloc[:len(df)].reset_index(drop=True)
 points.name = "배점"
 
-# Build working table
 work = pd.DataFrame({
     "문항번호": items,
     "난이도영역": band,
     "배점": points,
 })
-
-# Filter valid rows
 valid = work.dropna(subset=["난이도영역","배점"]).reset_index(drop=True)
 
 # ---------- Calculate expected scores ----------
@@ -164,15 +158,25 @@ cuts_order = ["A/B 컷", "B/C 컷", "C/D 컷", "D/E 컷"]
 df_cuts = pd.DataFrame([[cuts.get(k) for k in cuts_order]], columns=cuts_order)
 
 _color_map = {
-    "A/B 컷": "#E8F5E9",  # green
-    "B/C 컷": "#E3F2FD",  # blue
-    "C/D 컷": "#FFF3E0",  # orange
-    "D/E 컷": "#FFEBEE",  # red
+    "A/B 컷": "#E8F5E9",
+    "B/C 컷": "#E3F2FD",
+    "C/D 컷": "#FFF3E0",
+    "D/E 컷": "#FFEBEE",
 }
-def _style_cuts(df):
-    return pd.DataFrame([[f"background-color: {_color_map.get(c, '')}" for c in df.columns]], index=df.index)
+def _style_cuts(df: pd.DataFrame) -> pd.DataFrame:
+    styles = pd.DataFrame("", index=df.index, columns=df.columns)
+    for col in df.columns:
+        styles[col] = f"background-color: {_color_map.get(col, '')}"
+    return styles
 
-st.dataframe(df_cuts.style.apply(_style_cuts, axis=None).format("{:.2f}"), use_container_width=True)
+try:
+    st.dataframe(
+        df_cuts.style.apply(_style_cuts, axis=None).format("{:.2f}"),
+        use_container_width=True
+    )
+except Exception:
+    st.warning("색상 스타일 적용에 문제가 있어 일반 표로 표시합니다.")
+    st.dataframe(df_cuts, use_container_width=True)
 
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("A/B 컷", f"{df_cuts.iloc[0,0]:.2f}")

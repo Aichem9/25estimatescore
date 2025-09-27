@@ -27,7 +27,7 @@ with st.expander("규칙 요약 및 사용 순서", expanded=False):
     2) **문항 정보표 엑셀(8·9행 헤더, 10행 데이터 시작)**을 업로드합니다.
     3) 전처리 결과와 **수준별 기대 총점**을 확인하고, **분할 점수(컷)**을 검토합니다.
     ** 인창고(서울) Aichem 제작 **
-    """")
+    """)
 
 # ---------- Helpers ----------
 def clean_consecutive_duplicates(df: pd.DataFrame) -> pd.DataFrame:

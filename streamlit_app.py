@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(page_title="추정 분할 점수 생성기", layout="wide")
-st.title("추정 분할 점수 생성기 (고정 규칙 버전)")
+st.title("추정 분할 점수 생성기 (고정 규칙 버전) 서울 인창고 AIchem 제작")
 
 st.info("먼저 **사이드바에서 A~E 수준별 정답률(%)**을 설정한 뒤, **문항 정보표 엑셀 파일(.xls저장)**을 업로드하세요.", icon="ℹ️")
 
